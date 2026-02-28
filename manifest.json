@@ -1,7 +1,7 @@
 {
   "name": "Bottlenecks",
   "namespace": "cogo",
-  "version_number": "2.0.0",
+  "version_number": "2.1.0",
   "description": "Adds colored visual indicators to processing windows showing their bottleneck status.",
   "website_url": "https://github.com/co-go/bottlenecks_mod",
   "dependencies": [],

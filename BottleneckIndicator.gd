@@ -15,6 +15,12 @@ const COLOR_BOTTLENECK := Color(1, 1, 0)
 const COLOR_INACTIVE := Color(1, 0, 0)
 const COLOR_PAUSED := Color(0.5, 0.5, 0.5)
 
+# colorblind-friendly palette (blue/orange instead of green/yellow)
+const COLOR_GOOD_CB := Color(0.18, 0.55, 1.0)
+const COLOR_BOTTLENECK_CB := Color(1.0, 0.55, 0.0)
+
+var colorblind: bool = false
+
 
 func _ready() -> void:
     circle_texture = load("res://textures/icons/circle_full.png")
@@ -25,7 +31,9 @@ func _ready() -> void:
 
     mouse_entered.connect(_on_mouse_entered)
     mouse_exited.connect(_on_mouse_exited)
+    Signals.setting_set.connect(_on_setting_set)
 
+    colorblind = Data.colorblind
     queue_redraw()
 
 
@@ -110,13 +118,19 @@ func _draw() -> void:
         draw_texture_rect(circle_texture, Rect2(tex_pos, tex_size), false, color)
 
 
+func _on_setting_set(setting: String) -> void:
+    if setting == "colorblind":
+        colorblind = Data.colorblind
+        queue_redraw()
+
+
 func _get_color_for_state(s: int) -> Color:
     match s:
         -1: return COLOR_PAUSED
         0: return COLOR_INACTIVE
-        1: return COLOR_GOOD
-        2: return COLOR_GOOD
-        3: return COLOR_BOTTLENECK
+        1: return COLOR_GOOD_CB if colorblind else COLOR_GOOD
+        2: return COLOR_GOOD_CB if colorblind else COLOR_GOOD
+        3: return COLOR_BOTTLENECK_CB if colorblind else COLOR_BOTTLENECK
         _: return COLOR_INACTIVE
 
 
@@ -124,7 +138,7 @@ func _get_tooltip_for_state(s: int) -> String:
     match s:
         -1: return "paused"
         0: return "inactive - no input"
-        1: return "keeping up - processing faster than input"
-        2: return "optimal - input equivalent to processing speed"
-        3: return "bottleneck - can't keep up with input"
+        1: return "keeping up - processing rate faster than input rate"
+        2: return "optimal - input rate equivalent to processing rate"
+        3: return "bottleneck - processing speed less than input rate"
         _: return "unknown"

@@ -281,8 +281,15 @@ func _calculate_bottleneck_state(window: Node) -> int:
         var speed: float = window.get("speed") if "speed" in window else 0.0
         var goal: float = window.get("goal") if "goal" in window else 1.0
         var product_node = window.get("product") if "product" in window else null
-        var actual_output := _get_production(product_node) if product_node else 0.0
+        var product_mult: float = window.get("product_multiplier") if "product_multiplier" in window else 1.0
+        # normalize by product_multiplier so windows like wafer_cutter (x8) compare correctly
+        var actual_output := (_get_production(product_node) / product_mult) if product_node else 0.0
         var max_output := speed / goal if goal > 0 else 0.0
+
+        if max_output <= 0:
+            return 0
+        if actual_output <= 0.0:
+            return 0  # no inputs producing anything — show inactive, not starved
 
         var has_buffered_input := false
         for material in materials_container.get_children():
@@ -290,9 +297,7 @@ func _calculate_bottleneck_state(window: Node) -> int:
                 has_buffered_input = true
                 break
 
-        if max_output <= 0:
-            return 0
-        elif actual_output >= max_output * 0.99 and has_buffered_input:
+        if actual_output >= max_output * 0.99 and has_buffered_input:
             return 3
         elif actual_output >= max_output * 0.99:
             return 2
